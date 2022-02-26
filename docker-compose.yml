@@ -1,6 +1,16 @@
 version: "3.7"
 
 services:
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/api/Dockerfile
+    ports:
+     - "3000:8080"
+    volumes:
+      - ./api/:/go/api
+    tty: true
+
   db:
     image: mysql:8.0
     ports:
