@@ -7,7 +7,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/so-heee/go-rest-api/api/interfaces/controllers"
+	oapi "github.com/so-heee/go-rest-api/api/openapi"
 )
+
+type Handler struct {
+	GetUserHandler
+}
+
+type GetUserHandler struct{}
+
+func (h *GetUserHandler) GetUsersUserId(c echo.Context) error {
+	return c.JSON(http.StatusOK, &oapi.GetUsersUserIdResponse{})
+}
 
 func Run() {
 	// Echo instance
@@ -19,20 +30,26 @@ func Run() {
 		log.Fatal(err)
 	}
 
-	userController := controllers.NewUserController(h)
-
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	// swagger, err := oapi.GetSwagger()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// e.Use(oapimiddleware.OapiRequestValidator(swagger))
 
-	e.GET("/", hello) // ローカル環境の場合、http://localhost:1323/ にGETアクセスされるとhelloハンドラーを実行する
-	e.GET("/user/:id", func(c echo.Context) error { return userController.Show(c) })
+	userController := controllers.NewUserController(h)
+
+	e.GET("/", health)
+	// e.GET("/user/:id", userController.Show)
+
+	oapi.RegisterHandlers(e, userController)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))
 }
 
-// ハンドラーを定義
-func hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World2!!")
+func health(c echo.Context) error {
+	return c.String(http.StatusOK, "health check")
 }
