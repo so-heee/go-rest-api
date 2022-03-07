@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: Sample API
   description: A short description of API.
@@ -12,12 +12,8 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 1.0.0
 servers:
-  - url: https://dev.sample-server.com/v1
-    description: Development server
-  - url: https://stg.sample-server.com/v1
-    description: Staging server
-  - url: https://api.sample-server.com/v1
-    description: Production server
+  - url: http://localhost:3000
+    description: Local server
 
 paths:
 

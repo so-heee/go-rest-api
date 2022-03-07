@@ -33,6 +33,7 @@ func Run() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 	// swagger, err := oapi.GetSwagger()
 	// if err != nil {
 	// 	log.Fatal(err)
