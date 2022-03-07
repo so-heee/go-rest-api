@@ -2,6 +2,7 @@ version: "3.7"
 
 services:
   api:
+    container_name: api
     build:
       context: .
       dockerfile: ./docker/api/Dockerfile
@@ -10,8 +11,11 @@ services:
     volumes:
       - ./api/:/go/api
     tty: true
+    depends_on:
+      - db
 
   db:
+    container_name: db
     image: mysql:8.0
     ports:
       - "3306:3306"
