@@ -25,6 +25,8 @@ func Run() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
+
+	g := e.Group("/v1")
 	// swagger, err := oapi.GetSwagger()
 	// if err != nil {
 	// 	log.Fatal(err)
@@ -33,8 +35,8 @@ func Run() {
 
 	controller := controllers.NewController(h)
 
-	e.GET("/", health)
-	oapi.RegisterHandlers(e, controller)
+	g.GET("/", health)
+	oapi.RegisterHandlers(g, controller)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))

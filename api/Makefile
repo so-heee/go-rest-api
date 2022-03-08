@@ -1,17 +1,23 @@
 
+.PHONY: codegen-all
+codegen-all:
+	$(MAKE) codegen-server
+	$(MAKE) codegen-client
+	$(MAKE) codegen-type
+	$(MAKE) codegen-spec
 
 .PHONY: codegen-type
 codegen-type:
-	oapi-codegen -generate "types" openapi.yaml > ./openapi/types.gen.go
+	@go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest -generate "types" openapi.yaml > ./openapi/types.gen.go
 
 .PHONY: codegen-client
 codegen-client:
-	oapi-codegen -generate "client" openapi.yaml > ./openapi/client.gen.go
+	@go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest -generate "client" openapi.yaml > ./openapi/client.gen.go
 
 .PHONY: codegen-server
 codegen-server:
-	oapi-codegen -generate "server" openapi.yaml > ./openapi/server.gen.go
+	@go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest -generate "server" openapi.yaml > ./openapi/server.gen.go
 
 .PHONY: codegen-spec
 codegen-spec:
-	oapi-codegen -generate "spec" openapi.yaml > ./openapi/spec.gen.go
+	@go run github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest -generate "spec" openapi.yaml > ./openapi/spec.gen.go
