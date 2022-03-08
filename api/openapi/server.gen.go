@@ -37,10 +37,6 @@ func (w *ServerInterfaceWrapper) GetTweetByID(ctx echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter tweetId: %s", err))
 	}
 
-	ctx.Set(Api_keyScopes, []string{""})
-
-	ctx.Set(Users_authScopes, []string{"write:users", "read:users"})
-
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetTweetByID(ctx, tweetId)
 	return err
@@ -56,10 +52,6 @@ func (w *ServerInterfaceWrapper) GetUserByID(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userId: %s", err))
 	}
-
-	ctx.Set(Api_keyScopes, []string{""})
-
-	ctx.Set(Users_authScopes, []string{"write:users", "read:users"})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetUserByID(ctx, userId)

@@ -100,13 +100,13 @@ components:
           type: integer
           format: int64
 
-security: 
-  # Non-OAuth setting
-  - api_key: []
-  # OAuth setting
-  - users_auth:
-    - write:users
-    - read:users
+# security: 
+#   # Non-OAuth setting
+#   - api_key: []
+#   # OAuth setting
+#   - users_auth:
+#     - write:users
+#     - read:users
 
 tags:
   - name: users

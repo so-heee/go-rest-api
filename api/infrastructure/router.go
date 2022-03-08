@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	// oapimiddleware "github.com/deepmap/oapi-codegen/pkg/middleware"
+	oapimiddleware "github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/so-heee/go-rest-api/api/interfaces/controllers"
@@ -15,24 +15,23 @@ func Run() {
 	// Echo instance
 	e := echo.New()
 
-	conf := NewSQLConfig("user", "password", "db", "sample", 3306)
-	h, err := NewSQLHandler(&conf)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
 	g := e.Group("/v1")
-	// swagger, err := oapi.GetSwagger()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// e.Use(oapimiddleware.OapiRequestValidator(swagger))
+	swagger, err := oapi.GetSwagger()
+	if err != nil {
+		log.Fatal(err)
+	}
+	g.Use(oapimiddleware.OapiRequestValidator(swagger))
 
+	conf := NewSQLConfig("user", "password", "db", "sample", 3306)
+	h, err := NewSQLHandler(&conf)
+	if err != nil {
+		log.Fatal(err)
+	}
 	controller := controllers.NewController(h)
 
 	g.GET("/", health)
