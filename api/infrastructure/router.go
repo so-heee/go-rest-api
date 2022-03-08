@@ -4,21 +4,12 @@ import (
 	"log"
 	"net/http"
 
+	// oapimiddleware "github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/so-heee/go-rest-api/api/interfaces/controllers"
 	oapi "github.com/so-heee/go-rest-api/api/openapi"
 )
-
-type Handler struct {
-	GetUserHandler
-}
-
-type GetUserHandler struct{}
-
-func (h *GetUserHandler) GetUsersUserId(c echo.Context) error {
-	return c.JSON(http.StatusOK, &oapi.GetUsersUserIdResponse{})
-}
 
 func Run() {
 	// Echo instance
@@ -40,12 +31,10 @@ func Run() {
 	// }
 	// e.Use(oapimiddleware.OapiRequestValidator(swagger))
 
-	userController := controllers.NewUserController(h)
+	controller := controllers.NewController(h)
 
 	e.GET("/", health)
-	// e.GET("/user/:id", userController.Show)
-
-	oapi.RegisterHandlers(e, userController)
+	oapi.RegisterHandlers(e, controller)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8080"))

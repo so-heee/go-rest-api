@@ -13,9 +13,12 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get tweet by ID.
+	// (GET /tweets/{tweetId})
+	GetTweetByID(ctx echo.Context, tweetId int) error
 	// Get user by ID.
 	// (GET /users/{userId})
-	GetUsersUserId(ctx echo.Context, userId int) error
+	GetUserByID(ctx echo.Context, userId int) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -23,8 +26,28 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
-// GetUsersUserId converts echo context to params.
-func (w *ServerInterfaceWrapper) GetUsersUserId(ctx echo.Context) error {
+// GetTweetByID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetTweetByID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "tweetId" -------------
+	var tweetId int
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "tweetId", runtime.ParamLocationPath, ctx.Param("tweetId"), &tweetId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter tweetId: %s", err))
+	}
+
+	ctx.Set(Api_keyScopes, []string{""})
+
+	ctx.Set(Users_authScopes, []string{"write:users", "read:users"})
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetTweetByID(ctx, tweetId)
+	return err
+}
+
+// GetUserByID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUserByID(ctx echo.Context) error {
 	var err error
 	// ------------- Path parameter "userId" -------------
 	var userId int
@@ -39,7 +62,7 @@ func (w *ServerInterfaceWrapper) GetUsersUserId(ctx echo.Context) error {
 	ctx.Set(Users_authScopes, []string{"write:users", "read:users"})
 
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetUsersUserId(ctx, userId)
+	err = w.Handler.GetUserByID(ctx, userId)
 	return err
 }
 
@@ -71,7 +94,8 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/users/:userId", wrapper.GetUsersUserId)
+	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
+	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)
 
 }
 

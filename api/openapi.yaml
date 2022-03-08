@@ -23,6 +23,7 @@ paths:
         - users
       summary: Get user by ID.
       description: Returns a single User model
+      operationId: GetUserByID
       parameters:
         - name: userId
           in: path
@@ -43,6 +44,35 @@ paths:
                   id: 1
                   name: John Doe
 
+  /tweets/{tweetId}:
+    get:
+      tags:
+        - tweets
+      summary: Get tweet by ID.
+      description: Returns a single Tweet model
+      operationId: GetTweetByID
+      parameters:
+        - name: tweetId
+          in: path
+          description: tweet id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A single Tweet model
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/Tweet'
+                example:
+                  id: 1
+                  text: John Doe
+                  user_id: 1
+
+
 components:
   schemas:
     User:
@@ -56,6 +86,20 @@ components:
         name:
           type: string
 
+    Tweet:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+        text:
+          type: string
+        user_id:
+          type: integer
+          format: int64
+
 security: 
   # Non-OAuth setting
   - api_key: []
@@ -67,6 +111,8 @@ security:
 tags:
   - name: users
     description: Access to Users
+  - name: tweets
+    description: Access to Tweets
 
 externalDocs:
   description: Find more info here
