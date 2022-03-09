@@ -15,6 +15,15 @@ servers:
   - url: http://localhost:3000/v1
     description: Local server
 
+tags:
+  - name: client
+    description: Client
+  - name: users
+    description: Access to Users
+  - name: tweets
+    description: Access to Tweets
+
+
 paths:
 
   /users/{userId}:
@@ -31,6 +40,8 @@ paths:
           required: true
           schema:
             type: integer
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: A single User model
@@ -72,6 +83,25 @@ paths:
                   text: John Doe
                   user_id: 1
 
+  /login:
+    post:
+      summary: Authenticate with the admin server.
+      description: Used to retrieve all target segments for certain account id.
+      operationId: Authenticate
+      tags:
+        - client
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
 
 components:
   schemas:
@@ -100,6 +130,42 @@ components:
           type: integer
           format: int64
 
+    AuthenticationRequest:
+      type: object
+      properties:
+        apiKey:
+          type: string
+          example: 896045f3-42ee-4e73-9154-086644768b96
+        target:
+          type: object
+          properties:
+            identifier:
+              type: string
+            name:
+              type: string
+            anonymous:
+              type: boolean
+            attributes:
+              type: object
+          required:
+            - identifier
+      required:
+        - apiKey
+
+    AuthenticationResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
 # security: 
 #   # Non-OAuth setting
 #   - api_key: []
@@ -108,11 +174,6 @@ components:
 #     - write:users
 #     - read:users
 
-tags:
-  - name: users
-    description: Access to Users
-  - name: tweets
-    description: Access to Tweets
 
 externalDocs:
   description: Find more info here
