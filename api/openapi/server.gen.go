@@ -13,6 +13,9 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Authenticate with the admin server.
+	// (POST /auth)
+	Authenticate(ctx echo.Context) error
 	// Get tweet by ID.
 	// (GET /tweets/{tweetId})
 	GetTweetByID(ctx echo.Context, tweetId int) error
@@ -24,6 +27,15 @@ type ServerInterface interface {
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// Authenticate converts echo context to params.
+func (w *ServerInterfaceWrapper) Authenticate(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.Authenticate(ctx)
+	return err
 }
 
 // GetTweetByID converts echo context to params.
@@ -88,6 +100,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.POST(baseURL+"/auth", wrapper.Authenticate)
 	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
 	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)
 

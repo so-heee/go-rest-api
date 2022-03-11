@@ -4,9 +4,11 @@
 package Openapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -88,11 +90,40 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// Authenticate request with any body
+	AuthenticateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	Authenticate(ctx context.Context, body AuthenticateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTweetByID request
 	GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetUserByID request
 	GetUserByID(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) AuthenticateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuthenticateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) Authenticate(ctx context.Context, body AuthenticateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewAuthenticateRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -117,6 +148,46 @@ func (c *Client) GetUserByID(ctx context.Context, userId int, reqEditors ...Requ
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewAuthenticateRequest calls the generic Authenticate builder with application/json body
+func NewAuthenticateRequest(server string, body AuthenticateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewAuthenticateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewAuthenticateRequestWithBody generates requests for Authenticate with any type of body
+func NewAuthenticateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/auth")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewGetTweetByIDRequest generates requests for GetTweetByID
@@ -230,11 +301,38 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// Authenticate request with any body
+	AuthenticateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error)
+
+	AuthenticateWithResponse(ctx context.Context, body AuthenticateJSONRequestBody, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error)
+
 	// GetTweetByID request
 	GetTweetByIDWithResponse(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*GetTweetByIDResponse, error)
 
 	// GetUserByID request
 	GetUserByIDWithResponse(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*GetUserByIDResponse, error)
+}
+
+type AuthenticateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AuthenticationResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r AuthenticateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r AuthenticateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type GetTweetByIDResponse struct {
@@ -281,6 +379,23 @@ func (r GetUserByIDResponse) StatusCode() int {
 	return 0
 }
 
+// AuthenticateWithBodyWithResponse request with arbitrary body returning *AuthenticateResponse
+func (c *ClientWithResponses) AuthenticateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error) {
+	rsp, err := c.AuthenticateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuthenticateResponse(rsp)
+}
+
+func (c *ClientWithResponses) AuthenticateWithResponse(ctx context.Context, body AuthenticateJSONRequestBody, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error) {
+	rsp, err := c.Authenticate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseAuthenticateResponse(rsp)
+}
+
 // GetTweetByIDWithResponse request returning *GetTweetByIDResponse
 func (c *ClientWithResponses) GetTweetByIDWithResponse(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*GetTweetByIDResponse, error) {
 	rsp, err := c.GetTweetByID(ctx, tweetId, reqEditors...)
@@ -297,6 +412,32 @@ func (c *ClientWithResponses) GetUserByIDWithResponse(ctx context.Context, userI
 		return nil, err
 	}
 	return ParseGetUserByIDResponse(rsp)
+}
+
+// ParseAuthenticateResponse parses an HTTP response from a AuthenticateWithResponse call
+func ParseAuthenticateResponse(rsp *http.Response) (*AuthenticateResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuthenticateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuthenticationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseGetTweetByIDResponse parses an HTTP response from a GetTweetByIDWithResponse call

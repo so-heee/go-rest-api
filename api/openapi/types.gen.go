@@ -7,6 +7,17 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// AuthenticationRequest defines model for AuthenticationRequest.
+type AuthenticationRequest struct {
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+// AuthenticationResponse defines model for AuthenticationResponse.
+type AuthenticationResponse struct {
+	Token string `json:"token"`
+}
+
 // Tweet defines model for Tweet.
 type Tweet struct {
 	Id     int64   `json:"id"`
@@ -19,4 +30,10 @@ type User struct {
 	Id   int64   `json:"id"`
 	Name *string `json:"name,omitempty"`
 }
+
+// AuthenticateJSONBody defines parameters for Authenticate.
+type AuthenticateJSONBody AuthenticationRequest
+
+// AuthenticateJSONRequestBody defines body for Authenticate for application/json ContentType.
+type AuthenticateJSONRequestBody AuthenticateJSONBody
 

@@ -83,7 +83,7 @@ paths:
                   text: John Doe
                   user_id: 1
 
-  /login:
+  /auth:
     post:
       summary: Authenticate with the admin server.
       description: Used to retrieve all target segments for certain account id.
@@ -132,25 +132,14 @@ components:
 
     AuthenticationRequest:
       type: object
-      properties:
-        apiKey:
-          type: string
-          example: 896045f3-42ee-4e73-9154-086644768b96
-        target:
-          type: object
-          properties:
-            identifier:
-              type: string
-            name:
-              type: string
-            anonymous:
-              type: boolean
-            attributes:
-              type: object
-          required:
-            - identifier
       required:
-        - apiKey
+        - name
+        - password
+      properties:
+        name:
+          type: string
+        password:
+          type: string
 
     AuthenticationResponse:
       type: object
