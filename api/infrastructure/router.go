@@ -37,7 +37,7 @@ func Run() {
 
 	// g.Use(oapimiddleware.OapiRequestValidator(swagger))
 
-	g.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, security.ValidatiorOptions()))
+	g.Use(oapimiddleware.OapiRequestValidatorWithOptions(swagger, security.VerifyToken()))
 
 	conf := NewSQLConfig("user", "password", "db", "sample", 3306)
 	h, err := NewSQLHandler(&conf)

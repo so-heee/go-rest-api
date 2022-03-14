@@ -31,9 +31,3 @@ type User struct {
 	Name *string `json:"name,omitempty"`
 }
 
-// AuthenticateJSONBody defines parameters for Authenticate.
-type AuthenticateJSONBody AuthenticationRequest
-
-// AuthenticateJSONRequestBody defines body for Authenticate for application/json ContentType.
-type AuthenticateJSONRequestBody AuthenticateJSONBody
-

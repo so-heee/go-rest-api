@@ -83,7 +83,7 @@ paths:
                   text: John Doe
                   user_id: 1
 
-  /auth:
+  /oauth/access_token:
     post:
       summary: Authenticate with the admin server.
       description: Used to retrieve all target segments for certain account id.
@@ -92,7 +92,7 @@ paths:
         - client
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: '#/components/schemas/AuthenticationRequest'
       responses:

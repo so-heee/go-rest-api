@@ -1,9 +1,6 @@
 package controllers
 
 import (
-	"time"
-
-	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/so-heee/go-rest-api/api/infrastructure/security"
 	"github.com/so-heee/go-rest-api/api/interfaces/database"
@@ -39,17 +36,11 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 		return
 	}
 
-	claims := &security.JwtClaims{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 365).Unix(),
-		},
+	t, err := security.GenerateToken()
+	if err != nil {
+		return err
 	}
 
-	// Create token with claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
 	dto := oapi.AuthenticationResponse{
 		Token: t,
 	}

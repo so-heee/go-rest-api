@@ -14,7 +14,7 @@ import (
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Authenticate with the admin server.
-	// (POST /auth)
+	// (POST /oauth/access_token)
 	Authenticate(ctx echo.Context) error
 	// Get tweet by ID.
 	// (GET /tweets/{tweetId})
@@ -100,7 +100,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.POST(baseURL+"/auth", wrapper.Authenticate)
+	router.POST(baseURL+"/oauth/access_token", wrapper.Authenticate)
 	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
 	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)
 
