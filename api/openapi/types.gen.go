@@ -15,7 +15,7 @@ type AuthenticationRequest struct {
 
 // AuthenticationResponse defines model for AuthenticationResponse.
 type AuthenticationResponse struct {
-	Token string `json:"token"`
+	AccessToken string `json:"access_token"`
 }
 
 // Tweet defines model for Tweet.

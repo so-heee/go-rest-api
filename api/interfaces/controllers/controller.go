@@ -42,7 +42,7 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 	}
 
 	dto := oapi.AuthenticationResponse{
-		Token: t,
+		AccessToken: t,
 	}
 	c.JSON(200, dto)
 	return

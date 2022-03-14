@@ -144,10 +144,10 @@ components:
     AuthenticationResponse:
       type: object
       properties:
-        token:
+        access_token:
           type: string
       required:
-        - token
+        - access_token
 
   securitySchemes:
     BearerAuth:
