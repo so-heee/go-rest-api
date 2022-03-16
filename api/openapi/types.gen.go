@@ -28,6 +28,20 @@ type Tweet struct {
 // User defines model for User.
 type User struct {
 	Id   int64   `json:"id"`
+	Mail *string `json:"mail,omitempty"`
 	Name *string `json:"name,omitempty"`
 }
+
+// UserPostRequest defines model for UserPostRequest.
+type UserPostRequest struct {
+	Mail     string `json:"mail"`
+	Name     string `json:"name"`
+	Password string `json:"password"`
+}
+
+// PostUserJSONBody defines parameters for PostUser.
+type PostUserJSONBody UserPostRequest
+
+// PostUserJSONRequestBody defines body for PostUser for application/json ContentType.
+type PostUserJSONRequestBody PostUserJSONBody
 

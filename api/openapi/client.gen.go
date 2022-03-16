@@ -4,6 +4,7 @@
 package Openapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -95,6 +96,11 @@ type ClientInterface interface {
 	// GetTweetByID request
 	GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostUser request with any body
+	PostUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostUser(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetUserByID request
 	GetUserByID(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
@@ -113,6 +119,30 @@ func (c *Client) AuthenticateWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTweetByIDRequest(c.Server, tweetId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUserRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostUser(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostUserRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +224,46 @@ func NewGetTweetByIDRequest(server string, tweetId int) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewPostUserRequest calls the generic PostUser builder with application/json body
+func NewPostUserRequest(server string, body PostUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostUserRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostUserRequestWithBody generates requests for PostUser with any type of body
+func NewPostUserRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -281,6 +351,11 @@ type ClientWithResponsesInterface interface {
 	// GetTweetByID request
 	GetTweetByIDWithResponse(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*GetTweetByIDResponse, error)
 
+	// PostUser request with any body
+	PostUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserResponse, error)
+
+	PostUserWithResponse(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUserResponse, error)
+
 	// GetUserByID request
 	GetUserByIDWithResponse(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*GetUserByIDResponse, error)
 }
@@ -329,6 +404,27 @@ func (r GetTweetByIDResponse) StatusCode() int {
 	return 0
 }
 
+type PostUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r PostUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetUserByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -367,6 +463,23 @@ func (c *ClientWithResponses) GetTweetByIDWithResponse(ctx context.Context, twee
 		return nil, err
 	}
 	return ParseGetTweetByIDResponse(rsp)
+}
+
+// PostUserWithBodyWithResponse request with arbitrary body returning *PostUserResponse
+func (c *ClientWithResponses) PostUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserResponse, error) {
+	rsp, err := c.PostUserWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostUserWithResponse(ctx context.Context, body PostUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PostUserResponse, error) {
+	rsp, err := c.PostUser(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostUserResponse(rsp)
 }
 
 // GetUserByIDWithResponse request returning *GetUserByIDResponse
@@ -425,6 +538,22 @@ func ParseGetTweetByIDResponse(rsp *http.Response) (*GetTweetByIDResponse, error
 		}
 		response.JSON200 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParsePostUserResponse parses an HTTP response from a PostUserWithResponse call
+func ParsePostUserResponse(rsp *http.Response) (*PostUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil

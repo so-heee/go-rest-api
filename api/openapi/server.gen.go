@@ -19,6 +19,9 @@ type ServerInterface interface {
 	// Get tweet by ID.
 	// (GET /tweets/{tweetId})
 	GetTweetByID(ctx echo.Context, tweetId int) error
+	// Create a new User
+	// (POST /users)
+	PostUser(ctx echo.Context) error
 	// Get user by ID.
 	// (GET /users/{userId})
 	GetUserByID(ctx echo.Context, userId int) error
@@ -51,6 +54,15 @@ func (w *ServerInterfaceWrapper) GetTweetByID(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetTweetByID(ctx, tweetId)
+	return err
+}
+
+// PostUser converts echo context to params.
+func (w *ServerInterfaceWrapper) PostUser(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.PostUser(ctx)
 	return err
 }
 
@@ -102,6 +114,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.POST(baseURL+"/oauth/access_token", wrapper.Authenticate)
 	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
+	router.POST(baseURL+"/users", wrapper.PostUser)
 	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)
 
 }

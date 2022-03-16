@@ -48,6 +48,11 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 	return
 }
 
+func (controller *Controller) PostUser(c echo.Context) (err error) {
+	c.JSON(201, "CREATED")
+	return
+}
+
 func (controller *Controller) GetUserByID(c echo.Context, id int) (err error) {
 	user, err := controller.UserService.UserById(id)
 	if err != nil {

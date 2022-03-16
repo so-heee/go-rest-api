@@ -26,6 +26,28 @@ tags:
 
 paths:
 
+  /users:
+    post:
+      tags: 
+        - users
+      summary: Create a new User
+      description: Create a new User
+      operationId: PostUser
+      parameters: []
+      requestBody:
+        description: user to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPostRequest'
+            example:
+              name: John Doe
+              mail: john@gmail.com
+              password: tSNP2amF
+      responses:
+        '201':
+          description: CREATED
+
   /users/{userId}:
     get:
       tags:
@@ -52,8 +74,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/User'
                 example:
-                  id: 1
-                  name: John Doe
+                  id: 3
+                  name: Richard Roe
 
   /tweets/{tweetId}:
     get:
@@ -115,6 +137,8 @@ components:
           format: int64
         name:
           type: string
+        mail:
+          type: string
 
     Tweet:
       type: object
@@ -129,6 +153,20 @@ components:
         user_id:
           type: integer
           format: int64
+
+    UserPostRequest:
+      type: object
+      required:
+        - name
+        - mail
+        - password
+      properties:
+        name:
+          type: string
+        mail:
+          type: string
+        password:
+          type: string
 
     AuthenticationRequest:
       type: object
