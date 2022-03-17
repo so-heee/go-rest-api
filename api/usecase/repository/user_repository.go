@@ -3,5 +3,6 @@ package repository
 import "github.com/so-heee/go-rest-api/api/domain/model"
 
 type UserRepository interface {
-	FindById(id int) (model.User, error)
+	CreateUser(u *model.User) (*model.User, error)
+	FindById(id int) (*model.User, error)
 }

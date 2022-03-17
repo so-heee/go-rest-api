@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/so-heee/go-rest-api/api/domain/model"
 	"github.com/so-heee/go-rest-api/api/infrastructure/security"
 	"github.com/so-heee/go-rest-api/api/interfaces/database"
 	oapi "github.com/so-heee/go-rest-api/api/openapi"
@@ -49,7 +50,22 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 }
 
 func (controller *Controller) PostUser(c echo.Context) (err error) {
-	c.JSON(201, "CREATED")
+	var p oapi.UserPostRequest
+	if err := c.Bind(&p); err != nil {
+		c.JSON(500, NewError(err))
+	}
+	u := model.NewUser(p.Name, p.Mail, p.Password)
+	user, err := controller.UserService.CreateUser(u)
+	if err != nil {
+		c.JSON(500, NewError(err))
+	}
+
+	dto := oapi.User{
+		Id:   int64(user.Id),
+		Name: &user.Name,
+		Mail: &user.Mail,
+	}
+	c.JSON(201, dto)
 	return
 }
 
@@ -70,7 +86,7 @@ func (controller *Controller) GetUserByID(c echo.Context, id int) (err error) {
 func (controller *Controller) GetTweetByID(c echo.Context, id int) (err error) {
 	tweet, err := controller.TweetService.TweetById(id)
 	if err != nil {
-		c.JSON(500, NewError(err))
+		c.JSON(500, oapi)
 		return
 	}
 	dto := oapi.Tweet{

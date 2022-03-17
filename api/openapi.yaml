@@ -104,6 +104,8 @@ paths:
                   id: 1
                   text: John Doe
                   user_id: 1
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /oauth/access_token:
     post:
@@ -127,6 +129,44 @@ paths:
 
 components:
   schemas:
+
+    ApiError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/Error'
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubError'
+
+    SubError:
+      type: object
+      required:
+        - parameter
+        - value
+        - message
+      properties:
+        parameter:
+          type: string
+        value:
+          type: string
+        message:
+          type: string
+
     User:
       type: object
       required:
@@ -186,6 +226,32 @@ components:
           type: string
       required:
         - access_token
+
+  responses:
+    BadRequest:
+      description: "BadRequest – The request was invalid or cannot be served"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Forbidden:
+      description: "Forbidden – The server understood the request, but is refusing it or the access is not allowed"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    NotFound:
+      description: "NotFound – There is no resource behind the URI"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    InternalServerError:
+      description: "Internal Server Error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
 
   securitySchemes:
     BearerAuth:

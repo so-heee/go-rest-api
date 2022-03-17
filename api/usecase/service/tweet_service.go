@@ -10,7 +10,7 @@ type TweetService struct {
 	TweetRepository repository.TweetRepository
 }
 
-func (s *TweetService) TweetById(id int) (tweet model.Tweet, err error) {
+func (s *TweetService) TweetById(id int) (tweet *model.Tweet, err error) {
 	tweet, err = s.TweetRepository.FindById(id)
 	return
 }

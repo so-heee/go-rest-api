@@ -10,7 +10,12 @@ type UserService struct {
 	UserRepository repository.UserRepository
 }
 
-func (s *UserService) UserById(id int) (user model.User, err error) {
+func (s *UserService) CreateUser(u *model.User) (user *model.User, err error) {
+	user, err = s.UserRepository.CreateUser(u)
+	return
+}
+
+func (s *UserService) UserById(id int) (user *model.User, err error) {
 	user, err = s.UserRepository.FindById(id)
 	return
 }

@@ -1,7 +1,7 @@
 USE sample;
 
 CREATE TABLE users (
-    id int,
+    id int AUTO_INCREMENT,
     name varchar(50),
 	mail varchar(255),
 	password varchar(255),
@@ -11,7 +11,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE tweets (
-    id int,
+    id int AUTO_INCREMENT,
     text varchar(280),
     user_id int,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -7,6 +7,11 @@ const (
 	BearerAuthScopes = "BearerAuth.Scopes"
 )
 
+// ApiError defines model for ApiError.
+type ApiError struct {
+	Error Error `json:"error"`
+}
+
 // AuthenticationRequest defines model for AuthenticationRequest.
 type AuthenticationRequest struct {
 	Name     string `json:"name"`
@@ -16,6 +21,20 @@ type AuthenticationRequest struct {
 // AuthenticationResponse defines model for AuthenticationResponse.
 type AuthenticationResponse struct {
 	AccessToken string `json:"access_token"`
+}
+
+// Error defines model for Error.
+type Error struct {
+	Code    string      `json:"code"`
+	Errors  *[]SubError `json:"errors,omitempty"`
+	Message string      `json:"message"`
+}
+
+// SubError defines model for SubError.
+type SubError struct {
+	Message   string `json:"message"`
+	Parameter string `json:"parameter"`
+	Value     string `json:"value"`
 }
 
 // Tweet defines model for Tweet.
@@ -38,6 +57,9 @@ type UserPostRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }
+
+// InternalServerError defines model for InternalServerError.
+type InternalServerError ApiError
 
 // PostUserJSONBody defines parameters for PostUser.
 type PostUserJSONBody UserPostRequest

@@ -386,6 +386,7 @@ type GetTweetByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *map[string]interface{}
+	JSON500      *ApiError
 }
 
 // Status returns HTTPResponse.Status
@@ -537,6 +538,13 @@ func ParseGetTweetByIDResponse(rsp *http.Response) (*GetTweetByIDResponse, error
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ApiError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 
