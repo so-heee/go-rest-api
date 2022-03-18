@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/so-heee/go-rest-api/api/domain/model"
 	"github.com/so-heee/go-rest-api/api/infrastructure/security"
@@ -45,19 +47,19 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 	dto := oapi.AuthenticationResponse{
 		AccessToken: t,
 	}
-	c.JSON(200, dto)
+	c.JSON(http.StatusOK, dto)
 	return
 }
 
 func (controller *Controller) PostUser(c echo.Context) (err error) {
 	var p oapi.UserPostRequest
 	if err := c.Bind(&p); err != nil {
-		c.JSON(500, NewError(err))
+		return convertError(err)
 	}
 	u := model.NewUser(p.Name, p.Mail, p.Password)
 	user, err := controller.UserService.CreateUser(u)
 	if err != nil {
-		c.JSON(500, NewError(err))
+		return convertError(err)
 	}
 
 	dto := oapi.User{
@@ -65,35 +67,33 @@ func (controller *Controller) PostUser(c echo.Context) (err error) {
 		Name: &user.Name,
 		Mail: &user.Mail,
 	}
-	c.JSON(201, dto)
+	c.JSON(http.StatusCreated, dto)
 	return
 }
 
 func (controller *Controller) GetUserByID(c echo.Context, id int) (err error) {
 	user, err := controller.UserService.UserById(id)
 	if err != nil {
-		c.JSON(500, NewError(err))
-		return
+		return convertError(err)
 	}
 	dto := oapi.User{
 		Id:   int64(user.Id),
 		Name: &user.Name,
 	}
-	c.JSON(200, dto)
+	c.JSON(http.StatusOK, dto)
 	return
 }
 
 func (controller *Controller) GetTweetByID(c echo.Context, id int) (err error) {
 	tweet, err := controller.TweetService.TweetById(id)
 	if err != nil {
-		c.JSON(500, oapi)
-		return
+		return convertError(err)
 	}
 	dto := oapi.Tweet{
 		Id:     int64(tweet.Id),
 		Text:   &tweet.Text,
 		UserId: &tweet.UserId,
 	}
-	c.JSON(200, dto)
+	c.JSON(http.StatusOK, dto)
 	return
 }

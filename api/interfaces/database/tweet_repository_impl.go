@@ -7,9 +7,10 @@ type TweetRepository struct {
 	SQLHandler
 }
 
-func (repo *TweetRepository) FindById(id int) (tweet *model.Tweet, err error) {
-	if err = repo.First(&tweet, id).Error(); err != nil {
-		return
+func (r *TweetRepository) FindById(id int) (*model.Tweet, error) {
+	t := model.Tweet{}
+	if err := r.First(&t, id).Error(); err != nil {
+		return nil, convertError(err)
 	}
-	return
+	return &t, nil
 }
