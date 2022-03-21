@@ -51,6 +51,11 @@ type User struct {
 	Name *string `json:"name,omitempty"`
 }
 
+// UserPatchRequest defines model for UserPatchRequest.
+type UserPatchRequest struct {
+	Name string `json:"name"`
+}
+
 // UserPostRequest defines model for UserPostRequest.
 type UserPostRequest struct {
 	Mail     string `json:"mail"`
@@ -64,6 +69,12 @@ type InternalServerError ApiError
 // PostUserJSONBody defines parameters for PostUser.
 type PostUserJSONBody UserPostRequest
 
+// PatchUserJSONBody defines parameters for PatchUser.
+type PatchUserJSONBody UserPatchRequest
+
 // PostUserJSONRequestBody defines body for PostUser for application/json ContentType.
 type PostUserJSONRequestBody PostUserJSONBody
+
+// PatchUserJSONRequestBody defines body for PatchUser for application/json ContentType.
+type PatchUserJSONRequestBody PatchUserJSONBody
 

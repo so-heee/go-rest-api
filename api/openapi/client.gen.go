@@ -103,6 +103,11 @@ type ClientInterface interface {
 
 	// GetUserByID request
 	GetUserByID(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchUser request with any body
+	PatchUserWithBody(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchUser(ctx context.Context, userId int, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) AuthenticateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -155,6 +160,30 @@ func (c *Client) PostUser(ctx context.Context, body PostUserJSONRequestBody, req
 
 func (c *Client) GetUserByID(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetUserByIDRequest(c.Server, userId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchUserWithBody(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchUserRequestWithBody(c.Server, userId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchUser(ctx context.Context, userId int, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchUserRequest(c.Server, userId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -302,6 +331,53 @@ func NewGetUserByIDRequest(server string, userId int) (*http.Request, error) {
 	return req, nil
 }
 
+// NewPatchUserRequest calls the generic PatchUser builder with application/json body
+func NewPatchUserRequest(server string, userId int, body PatchUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchUserRequestWithBody(server, userId, "application/json", bodyReader)
+}
+
+// NewPatchUserRequestWithBody generates requests for PatchUser with any type of body
+func NewPatchUserRequestWithBody(server string, userId int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "userId", runtime.ParamLocationPath, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -358,6 +434,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetUserByID request
 	GetUserByIDWithResponse(ctx context.Context, userId int, reqEditors ...RequestEditorFn) (*GetUserByIDResponse, error)
+
+	// PatchUser request with any body
+	PatchUserWithBodyWithResponse(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
+
+	PatchUserWithResponse(ctx context.Context, userId int, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
 }
 
 type AuthenticateResponse struct {
@@ -448,6 +529,27 @@ func (r GetUserByIDResponse) StatusCode() int {
 	return 0
 }
 
+type PatchUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // AuthenticateWithBodyWithResponse request with arbitrary body returning *AuthenticateResponse
 func (c *ClientWithResponses) AuthenticateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error) {
 	rsp, err := c.AuthenticateWithBody(ctx, contentType, body, reqEditors...)
@@ -490,6 +592,23 @@ func (c *ClientWithResponses) GetUserByIDWithResponse(ctx context.Context, userI
 		return nil, err
 	}
 	return ParseGetUserByIDResponse(rsp)
+}
+
+// PatchUserWithBodyWithResponse request with arbitrary body returning *PatchUserResponse
+func (c *ClientWithResponses) PatchUserWithBodyWithResponse(ctx context.Context, userId int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUserResponse, error) {
+	rsp, err := c.PatchUserWithBody(ctx, userId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchUserWithResponse(ctx context.Context, userId int, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUserResponse, error) {
+	rsp, err := c.PatchUser(ctx, userId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchUserResponse(rsp)
 }
 
 // ParseAuthenticateResponse parses an HTTP response from a AuthenticateWithResponse call
@@ -588,6 +707,22 @@ func ParseGetUserByIDResponse(rsp *http.Response) (*GetUserByIDResponse, error) 
 		}
 		response.JSON200 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParsePatchUserResponse parses an HTTP response from a PatchUserWithResponse call
+func ParsePatchUserResponse(rsp *http.Response) (*PatchUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil

@@ -19,12 +19,15 @@ type ServerInterface interface {
 	// Get tweet by ID.
 	// (GET /tweets/{tweetId})
 	GetTweetByID(ctx echo.Context, tweetId int) error
-	// Create a new User
+	// Create a new User.
 	// (POST /users)
 	PostUser(ctx echo.Context) error
-	// Get user by ID.
+	// Get User by ID.
 	// (GET /users/{userId})
 	GetUserByID(ctx echo.Context, userId int) error
+	// Patch User.
+	// (PATCH /users/{userId})
+	PatchUser(ctx echo.Context, userId int) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
@@ -84,6 +87,22 @@ func (w *ServerInterfaceWrapper) GetUserByID(ctx echo.Context) error {
 	return err
 }
 
+// PatchUser converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchUser(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userId" -------------
+	var userId int
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userId", runtime.ParamLocationPath, ctx.Param("userId"), &userId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userId: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.PatchUser(ctx, userId)
+	return err
+}
+
 // This is a simple interface which specifies echo.Route addition functions which
 // are present on both echo.Echo and echo.Group, since we want to allow using
 // either of them for path registration
@@ -116,6 +135,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
 	router.POST(baseURL+"/users", wrapper.PostUser)
 	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)
+	router.PATCH(baseURL+"/users/:userId", wrapper.PatchUser)
 
 }
 

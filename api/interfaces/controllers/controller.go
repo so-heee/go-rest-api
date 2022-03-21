@@ -84,6 +84,26 @@ func (controller *Controller) GetUserByID(c echo.Context, id int) (err error) {
 	return
 }
 
+func (controller *Controller) PatchUser(c echo.Context, id int) (err error) {
+	var p oapi.UserPatchRequest
+	if err := c.Bind(&p); err != nil {
+		return convertError(err)
+	}
+	u := model.User{Id: id, Name: p.Name}
+	user, err := controller.UserService.UpdateUser(&u)
+	if err != nil {
+		return convertError(err)
+	}
+
+	dto := oapi.User{
+		Id:   int64(user.Id),
+		Name: &user.Name,
+		Mail: &user.Mail,
+	}
+	c.JSON(http.StatusOK, dto)
+    return
+}
+
 func (controller *Controller) GetTweetByID(c echo.Context, id int) (err error) {
 	tweet, err := controller.TweetService.TweetById(id)
 	if err != nil {

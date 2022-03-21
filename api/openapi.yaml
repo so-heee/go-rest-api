@@ -30,7 +30,7 @@ paths:
     post:
       tags: 
         - users
-      summary: Create a new User
+      summary: Create a new User.
       description: Create a new User
       operationId: PostUser
       parameters: []
@@ -52,7 +52,7 @@ paths:
     get:
       tags:
         - users
-      summary: Get user by ID.
+      summary: Get User by ID.
       description: Returns a single User model
       operationId: GetUserByID
       parameters:
@@ -76,6 +76,31 @@ paths:
                 example:
                   id: 3
                   name: Richard Roe
+
+    patch:
+      tags:
+        - users
+      summary: Patch User.
+      description: Update a User
+      operationId: PatchUser
+      parameters:
+        - name: userId
+          in: path
+          description: user id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: user to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatchRequest'
+            example:
+              name: John Doe
+      responses:
+        '200':
+          description: CREATED
 
   /tweets/{tweetId}:
     get:
@@ -206,6 +231,14 @@ components:
         mail:
           type: string
         password:
+          type: string
+
+    UserPatchRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
           type: string
 
     AuthenticationRequest:
