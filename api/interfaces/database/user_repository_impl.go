@@ -26,3 +26,10 @@ func (r *UserRepository) FindById(id int) (user *model.User, err error) {
 	}
 	return
 }
+
+func (r *UserRepository) FindByName(n string) (user *model.User, err error) {
+	if err = r.Where("name = ?", n).First(&user).Error(); err != nil {
+		return
+	}
+	return
+}

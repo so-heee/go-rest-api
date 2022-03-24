@@ -24,3 +24,8 @@ func (s *UserService) UserById(id int) (user *model.User, err error) {
 	user, err = s.UserRepository.FindById(id)
 	return
 }
+
+func (s *UserService) UserByName(n string) (user *model.User, err error) {
+	user, err = s.UserRepository.FindByName(n)
+	return
+}

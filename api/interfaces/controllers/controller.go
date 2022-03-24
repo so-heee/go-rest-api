@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/so-heee/go-rest-api/api/domain/model"
+	"github.com/so-heee/go-rest-api/api/domain/value"
 	"github.com/so-heee/go-rest-api/api/infrastructure/security"
 	"github.com/so-heee/go-rest-api/api/interfaces/database"
 	oapi "github.com/so-heee/go-rest-api/api/openapi"
@@ -39,6 +40,15 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 		return
 	}
 
+	user, err := controller.UserService.UserByName(req.Name)
+	if err != nil {
+		return convertError(err)
+	}
+	err = user.Password.Verify(req.Password)
+	if err != nil {
+		return convertError(err)
+	}
+
 	t, err := security.GenerateToken()
 	if err != nil {
 		return err
@@ -57,6 +67,12 @@ func (controller *Controller) PostUser(c echo.Context) (err error) {
 		return convertError(err)
 	}
 	u := model.NewUser(p.Name, p.Mail, p.Password)
+	x, err := u.Password.ConvertHash()
+	if err != nil {
+		return convertError(err)
+	}
+	u.Password = value.Password(x)
+
 	user, err := controller.UserService.CreateUser(u)
 	if err != nil {
 		return convertError(err)
@@ -101,7 +117,7 @@ func (controller *Controller) PatchUser(c echo.Context, id int) (err error) {
 		Mail: &user.Mail,
 	}
 	c.JSON(http.StatusOK, dto)
-    return
+	return
 }
 
 func (controller *Controller) GetTweetByID(c echo.Context, id int) (err error) {
