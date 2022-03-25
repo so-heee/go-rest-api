@@ -34,12 +34,12 @@ func NewController(sqlHandler database.SQLHandler) *Controller {
 }
 
 func (controller *Controller) Authenticate(c echo.Context) (err error) {
-	req := &oapi.AuthenticationRequest{}
-	err = c.Bind(req)
-	if err != nil {
-		return
+	name := c.FormValue("name")
+	password := c.FormValue("password")
+	req := oapi.AuthenticationRequest{
+		Name:     name,
+		Password: password,
 	}
-
 	user, err := controller.UserService.UserByName(req.Name)
 	if err != nil {
 		return convertError(err)

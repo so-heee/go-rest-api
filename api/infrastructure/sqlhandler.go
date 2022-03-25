@@ -37,7 +37,7 @@ func NewSQLHandler(conf *SQLConfig) (database.SQLHandler, error) {
 	uri := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&collation=utf8mb4_general_ci", conf.user, conf.password, conf.host, conf.port, conf.dbname)
 	log.Info(uri)
 	conn, err := gorm.Open(mysql.Open(uri), &gorm.Config{
-		Logger: logger.Default.LogMode(1),
+		Logger: logger.Default.LogMode(2),
 	})
 	if err != nil {
 		log.Fatalf("db connect error: %v", err)

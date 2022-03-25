@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	oapi "github.com/so-heee/go-rest-api/api/openapi"
 	"github.com/so-heee/go-rest-api/api/usecase/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Error struct {
@@ -44,6 +45,9 @@ func convertError(err error) error {
 
 	case errors.Is(err, repository.ErrNotFound):
 		return echo.NewHTTPError(http.StatusNotFound, NewError(http.StatusText(http.StatusNotFound), err))
+
+	case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+		return echo.NewHTTPError(http.StatusNotFound, NewError(http.StatusText(http.StatusForbidden), err))
 
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf("%w", err).Error())
