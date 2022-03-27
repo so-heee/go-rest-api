@@ -11,7 +11,6 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
-	"github.com/so-heee/go-rest-api/api/domain/model"
 )
 
 type (
@@ -92,28 +91,46 @@ func VerifyToken() *oapimiddleware.Options {
 	}
 }
 
-func GenerateAccessToken(user *model.User) (string, error) {
+func VerifyRefreshToken(t string) (string, error) {
+	claims := &JwtClaims{}
+	token, err := jwt.ParseWithClaims(t, claims, func(t *jwt.Token) (interface{}, error) {
+		// Check the signing method
+		if t.Method.Alg() != AlgorithmHS256 {
+			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
+		}
+
+		return []byte("secret"), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	c := token.Claims.(*JwtClaims)
+	return c.Id, nil
+}
+
+func GenerateAccessToken(id int) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
-	return generateToken(user, expirationTime)
+	return generateToken(id, expirationTime)
 }
 
-func GenerateRefreshToken(user *model.User) (string, error) {
+func GenerateRefreshToken(id int) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
-	return generateToken(user, expirationTime)
+	return generateToken(id, expirationTime)
 }
 
-func generateToken(user *model.User, expirationTime time.Time) (string, error) {
+func generateToken(id int, expirationTime time.Time) (string, error) {
 
 	claims := &JwtClaims{
 		StandardClaims: jwt.StandardClaims{
-			Id:        strconv.Itoa(user.Id),
+			Id:        strconv.Itoa(id),
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(SigningKey)
+	tokenString, err := token.SignedString([]byte(SigningKey))
 	if err != nil {
 		return "", err
 	}

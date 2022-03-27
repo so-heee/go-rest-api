@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/so-heee/go-rest-api/api/domain/model"
@@ -49,9 +50,9 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 		return convertError(err)
 	}
 
-	t, err := security.GenerateAccessToken(user)
+	t, err := security.GenerateAccessToken(user.Id)
 	if err != nil {
-		return err
+		return convertError(err)
 	}
 
 	dto := oapi.AuthenticationResponse{
@@ -61,7 +62,25 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 	return
 }
 
-func (controller *Controller) GetRefreshToken(ctx echo.Context, params oapi.GetRefreshTokenParams) (err error) {
+func (controller *Controller) GetRefreshToken(c echo.Context, params oapi.GetRefreshTokenParams) (err error) {
+	u, err := security.VerifyRefreshToken(params.AccessToken)
+	if err != nil {
+		return convertError(err)
+	}
+
+	i, err := strconv.Atoi(u)
+	if err != nil {
+		return convertError(err)
+	}
+	t, err := security.GenerateRefreshToken(i)
+	if err != nil {
+		return convertError(err)
+	}
+
+	dto := oapi.AuthenticationResponse{
+		AccessToken: t,
+	}
+	c.JSON(http.StatusOK, dto)
 	return
 }
 
