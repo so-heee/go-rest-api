@@ -49,13 +49,26 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 		return convertError(err)
 	}
 
-	t, err := security.GenerateToken()
+	t, err := security.GenerateAccessToken(user)
 	if err != nil {
 		return err
 	}
 
 	dto := oapi.AuthenticationResponse{
 		AccessToken: t,
+	}
+	c.JSON(http.StatusOK, dto)
+	return
+}
+
+func (controller *Controller) GetRefreshToken(ctx echo.Context, params oapi.GetRefreshTokenParams) (err error) {
+	return
+}
+
+func (controller *Controller) RefreshAccessToken(c echo.Context, params oapi.RefreshAccessTokenParams) (err error) {
+
+	dto := oapi.AuthenticationResponse{
+		AccessToken: "",
 	}
 	c.JSON(http.StatusOK, dto)
 	return

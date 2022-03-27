@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	oapimiddleware "github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/so-heee/go-rest-api/api/domain/model"
 )
 
 type (
@@ -29,6 +31,7 @@ const (
 	ContextKey     = "user"
 	TokenHeader    = echo.HeaderAuthorization
 	AuthScheme     = "Bearer"
+	SigningKey     = "secret"
 )
 
 type JwtClaims struct {
@@ -89,24 +92,33 @@ func VerifyToken() *oapimiddleware.Options {
 	}
 }
 
-func GenerateToken() (string, error) {
+func GenerateAccessToken(user *model.User) (string, error) {
+	expirationTime := time.Now().Add(1 * time.Hour)
+	return generateToken(user, expirationTime)
+}
+
+func GenerateRefreshToken(user *model.User) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	return generateToken(user, expirationTime)
+}
+
+func generateToken(user *model.User, expirationTime time.Time) (string, error) {
 
 	claims := &JwtClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24 * 365).Unix(),
+			Id:        strconv.Itoa(user.Id),
+			ExpiresAt: expirationTime.Unix(),
 		},
 	}
 
-	// Create token with claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
+	tokenString, err := token.SignedString(SigningKey)
 	if err != nil {
 		return "", err
 	}
 
-	return t, nil
+	return tokenString, nil
 }
 
 // jwtFromHeader returns a `jwtExtractor` that extracts token from the request header.

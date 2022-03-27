@@ -13,9 +13,15 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Authenticate with the admin server.
+	// Get Refresh Token.
+	// (GET /oauth/access_token)
+	GetRefreshToken(ctx echo.Context, params GetRefreshTokenParams) error
+	// Authenticate.
 	// (POST /oauth/access_token)
 	Authenticate(ctx echo.Context) error
+	// Refresh Access Token.
+	// (GET /oauth/refresh_access_token)
+	RefreshAccessToken(ctx echo.Context, params RefreshAccessTokenParams) error
 	// Get tweet by ID.
 	// (GET /tweets/{tweetId})
 	GetTweetByID(ctx echo.Context, tweetId int) error
@@ -35,12 +41,48 @@ type ServerInterfaceWrapper struct {
 	Handler ServerInterface
 }
 
+// GetRefreshToken converts echo context to params.
+func (w *ServerInterfaceWrapper) GetRefreshToken(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRefreshTokenParams
+	// ------------- Required query parameter "access_token" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "access_token", ctx.QueryParams(), &params.AccessToken)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter access_token: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetRefreshToken(ctx, params)
+	return err
+}
+
 // Authenticate converts echo context to params.
 func (w *ServerInterfaceWrapper) Authenticate(ctx echo.Context) error {
 	var err error
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.Authenticate(ctx)
+	return err
+}
+
+// RefreshAccessToken converts echo context to params.
+func (w *ServerInterfaceWrapper) RefreshAccessToken(ctx echo.Context) error {
+	var err error
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RefreshAccessTokenParams
+	// ------------- Required query parameter "refresh_token" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "refresh_token", ctx.QueryParams(), &params.RefreshToken)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter refresh_token: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.RefreshAccessToken(ctx, params)
 	return err
 }
 
@@ -131,7 +173,9 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
+	router.GET(baseURL+"/oauth/access_token", wrapper.GetRefreshToken)
 	router.POST(baseURL+"/oauth/access_token", wrapper.Authenticate)
+	router.GET(baseURL+"/oauth/refresh_access_token", wrapper.RefreshAccessToken)
 	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
 	router.POST(baseURL+"/users", wrapper.PostUser)
 	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)

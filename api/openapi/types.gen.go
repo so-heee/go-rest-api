@@ -66,6 +66,18 @@ type UserPostRequest struct {
 // InternalServerError defines model for InternalServerError.
 type InternalServerError ApiError
 
+// GetRefreshTokenParams defines parameters for GetRefreshToken.
+type GetRefreshTokenParams struct {
+	// access token
+	AccessToken string `json:"access_token"`
+}
+
+// RefreshAccessTokenParams defines parameters for RefreshAccessToken.
+type RefreshAccessTokenParams struct {
+	// refresh token
+	RefreshToken string `json:"refresh_token"`
+}
+
 // PostUserJSONBody defines parameters for PostUser.
 type PostUserJSONBody UserPostRequest
 

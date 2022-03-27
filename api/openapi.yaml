@@ -26,12 +26,75 @@ tags:
 
 paths:
 
+  /oauth/access_token:
+    get:
+      tags:
+        - client
+      summary: Get Refresh Token.
+      description: リフレッシュトークンの取得.
+      operationId: GetRefreshToken
+      parameters:
+        - name: access_token
+          in: query
+          description: access token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+
+    post:
+      tags:
+        - client
+      summary: Authenticate.
+      description: ユーザー名、パスワードによる認証.
+      operationId: Authenticate
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+
+  /oauth/refresh_access_token:
+    get:
+      tags:
+        - client
+      summary: Refresh Access Token.
+      description: アクセストークンの更新.
+      operationId: RefreshAccessToken
+      parameters:
+        - name: refresh_token
+          in: query
+          description: refresh token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationResponse'
+
   /users:
     post:
       tags: 
         - users
       summary: Create a new User.
-      description: Create a new User
+      description: ユーザー情報登録
       operationId: PostUser
       parameters: []
       requestBody:
@@ -53,7 +116,7 @@ paths:
       tags:
         - users
       summary: Get User by ID.
-      description: Returns a single User model
+      description: ユーザー情報取得
       operationId: GetUserByID
       parameters:
         - name: userId
@@ -81,7 +144,7 @@ paths:
       tags:
         - users
       summary: Patch User.
-      description: Update a User
+      description: ユーザー情報更新
       operationId: PatchUser
       parameters:
         - name: userId
@@ -107,7 +170,7 @@ paths:
       tags:
         - tweets
       summary: Get tweet by ID.
-      description: Returns a single Tweet model
+      description: ツイート情報取得
       operationId: GetTweetByID
       parameters:
         - name: tweetId
@@ -132,25 +195,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /oauth/access_token:
-    post:
-      summary: Authenticate with the admin server.
-      description: Used to retrieve all target segments for certain account id.
-      operationId: Authenticate
-      tags:
-        - client
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/AuthenticationRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthenticationResponse'
 
 components:
   schemas:

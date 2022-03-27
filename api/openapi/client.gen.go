@@ -90,8 +90,14 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// GetRefreshToken request
+	GetRefreshToken(ctx context.Context, params *GetRefreshTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// Authenticate request with any body
 	AuthenticateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RefreshAccessToken request
+	RefreshAccessToken(ctx context.Context, params *RefreshAccessTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTweetByID request
 	GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -110,8 +116,32 @@ type ClientInterface interface {
 	PatchUser(ctx context.Context, userId int, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
+func (c *Client) GetRefreshToken(ctx context.Context, params *GetRefreshTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRefreshTokenRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) AuthenticateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAuthenticateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) RefreshAccessToken(ctx context.Context, params *RefreshAccessTokenParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRefreshAccessTokenRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +224,49 @@ func (c *Client) PatchUser(ctx context.Context, userId int, body PatchUserJSONRe
 	return c.Client.Do(req)
 }
 
+// NewGetRefreshTokenRequest generates requests for GetRefreshToken
+func NewGetRefreshTokenRequest(server string, params *GetRefreshTokenParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/oauth/access_token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "access_token", runtime.ParamLocationQuery, params.AccessToken); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewAuthenticateRequestWithBody generates requests for Authenticate with any type of body
 func NewAuthenticateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
@@ -219,6 +292,49 @@ func NewAuthenticateRequestWithBody(server string, contentType string, body io.R
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewRefreshAccessTokenRequest generates requests for RefreshAccessToken
+func NewRefreshAccessTokenRequest(server string, params *RefreshAccessTokenParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/oauth/refresh_access_token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if queryFrag, err := runtime.StyleParamWithLocation("form", true, "refresh_token", runtime.ParamLocationQuery, params.RefreshToken); err != nil {
+		return nil, err
+	} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+		return nil, err
+	} else {
+		for k, v := range parsed {
+			for _, v2 := range v {
+				queryValues.Add(k, v2)
+			}
+		}
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -421,8 +537,14 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// GetRefreshToken request
+	GetRefreshTokenWithResponse(ctx context.Context, params *GetRefreshTokenParams, reqEditors ...RequestEditorFn) (*GetRefreshTokenResponse, error)
+
 	// Authenticate request with any body
 	AuthenticateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error)
+
+	// RefreshAccessToken request
+	RefreshAccessTokenWithResponse(ctx context.Context, params *RefreshAccessTokenParams, reqEditors ...RequestEditorFn) (*RefreshAccessTokenResponse, error)
 
 	// GetTweetByID request
 	GetTweetByIDWithResponse(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*GetTweetByIDResponse, error)
@@ -441,6 +563,28 @@ type ClientWithResponsesInterface interface {
 	PatchUserWithResponse(ctx context.Context, userId int, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
 }
 
+type GetRefreshTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AuthenticationResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRefreshTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRefreshTokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type AuthenticateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -457,6 +601,28 @@ func (r AuthenticateResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r AuthenticateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type RefreshAccessTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AuthenticationResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r RefreshAccessTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RefreshAccessTokenResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -550,6 +716,15 @@ func (r PatchUserResponse) StatusCode() int {
 	return 0
 }
 
+// GetRefreshTokenWithResponse request returning *GetRefreshTokenResponse
+func (c *ClientWithResponses) GetRefreshTokenWithResponse(ctx context.Context, params *GetRefreshTokenParams, reqEditors ...RequestEditorFn) (*GetRefreshTokenResponse, error) {
+	rsp, err := c.GetRefreshToken(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRefreshTokenResponse(rsp)
+}
+
 // AuthenticateWithBodyWithResponse request with arbitrary body returning *AuthenticateResponse
 func (c *ClientWithResponses) AuthenticateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*AuthenticateResponse, error) {
 	rsp, err := c.AuthenticateWithBody(ctx, contentType, body, reqEditors...)
@@ -557,6 +732,15 @@ func (c *ClientWithResponses) AuthenticateWithBodyWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseAuthenticateResponse(rsp)
+}
+
+// RefreshAccessTokenWithResponse request returning *RefreshAccessTokenResponse
+func (c *ClientWithResponses) RefreshAccessTokenWithResponse(ctx context.Context, params *RefreshAccessTokenParams, reqEditors ...RequestEditorFn) (*RefreshAccessTokenResponse, error) {
+	rsp, err := c.RefreshAccessToken(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRefreshAccessTokenResponse(rsp)
 }
 
 // GetTweetByIDWithResponse request returning *GetTweetByIDResponse
@@ -611,6 +795,32 @@ func (c *ClientWithResponses) PatchUserWithResponse(ctx context.Context, userId 
 	return ParsePatchUserResponse(rsp)
 }
 
+// ParseGetRefreshTokenResponse parses an HTTP response from a GetRefreshTokenWithResponse call
+func ParseGetRefreshTokenResponse(rsp *http.Response) (*GetRefreshTokenResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRefreshTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuthenticationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseAuthenticateResponse parses an HTTP response from a AuthenticateWithResponse call
 func ParseAuthenticateResponse(rsp *http.Response) (*AuthenticateResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -620,6 +830,32 @@ func ParseAuthenticateResponse(rsp *http.Response) (*AuthenticateResponse, error
 	}
 
 	response := &AuthenticateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AuthenticationResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRefreshAccessTokenResponse parses an HTTP response from a RefreshAccessTokenWithResponse call
+func ParseRefreshAccessTokenResponse(rsp *http.Response) (*RefreshAccessTokenResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RefreshAccessTokenResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
