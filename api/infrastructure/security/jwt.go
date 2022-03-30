@@ -25,12 +25,13 @@ var (
 
 // Defaults
 const (
-	AlgorithmHS256 = "HS256"
-	SigningMethod  = AlgorithmHS256
-	ContextKey     = "user"
-	TokenHeader    = echo.HeaderAuthorization
-	AuthScheme     = "Bearer"
-	SigningKey     = "secret"
+	AlgorithmHS256    = "HS256"
+	SigningMethod     = AlgorithmHS256
+	ContextKey        = "user"
+	TokenHeader       = echo.HeaderAuthorization
+	AuthScheme        = "Bearer"
+	SigningKey        = "secret"
+	SigningRefreshKey = "secretRefresh"
 )
 
 type JwtClaims struct {
@@ -91,6 +92,24 @@ func VerifyToken() *oapimiddleware.Options {
 	}
 }
 
+func VerifyAccessToken(t string) (string, error) {
+	claims := &JwtClaims{}
+	token, err := jwt.ParseWithClaims(t, claims, func(t *jwt.Token) (interface{}, error) {
+		// Check the signing method
+		if t.Method.Alg() != AlgorithmHS256 {
+			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
+		}
+
+		return []byte(SigningKey), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	c := token.Claims.(*JwtClaims)
+	return c.Id, nil
+}
+
 func VerifyRefreshToken(t string) (string, error) {
 	claims := &JwtClaims{}
 	token, err := jwt.ParseWithClaims(t, claims, func(t *jwt.Token) (interface{}, error) {
@@ -99,7 +118,7 @@ func VerifyRefreshToken(t string) (string, error) {
 			return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 		}
 
-		return []byte("secret"), nil
+		return []byte(SigningRefreshKey), nil
 	})
 	if err != nil {
 		return "", err
@@ -111,15 +130,15 @@ func VerifyRefreshToken(t string) (string, error) {
 
 func GenerateAccessToken(id int) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
-	return generateToken(id, expirationTime)
+	return generateToken(id, expirationTime, SigningKey)
 }
 
 func GenerateRefreshToken(id int) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
-	return generateToken(id, expirationTime)
+	return generateToken(id, expirationTime, SigningRefreshKey)
 }
 
-func generateToken(id int, expirationTime time.Time) (string, error) {
+func generateToken(id int, expirationTime time.Time, key string) (string, error) {
 
 	claims := &JwtClaims{
 		StandardClaims: jwt.StandardClaims{
@@ -130,7 +149,7 @@ func generateToken(id int, expirationTime time.Time) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(SigningKey))
+	tokenString, err := token.SignedString([]byte(key))
 	if err != nil {
 		return "", err
 	}

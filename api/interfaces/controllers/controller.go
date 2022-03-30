@@ -63,7 +63,7 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 }
 
 func (controller *Controller) GetRefreshToken(c echo.Context, params oapi.GetRefreshTokenParams) (err error) {
-	u, err := security.VerifyRefreshToken(params.AccessToken)
+	u, err := security.VerifyAccessToken(params.AccessToken)
 	if err != nil {
 		return convertError(err)
 	}
