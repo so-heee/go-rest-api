@@ -54,31 +54,15 @@ func (controller *Controller) Authenticate(c echo.Context) (err error) {
 	if err != nil {
 		return convertError(err)
 	}
-
-	dto := oapi.AuthenticationResponse{
-		AccessToken: t,
-	}
-	c.JSON(http.StatusOK, dto)
-	return
-}
-
-func (controller *Controller) GetRefreshToken(c echo.Context, params oapi.GetRefreshTokenParams) (err error) {
-	u, err := security.VerifyAccessToken(params.AccessToken)
-	if err != nil {
-		return convertError(err)
-	}
-
-	i, err := strconv.Atoi(u)
-	if err != nil {
-		return convertError(err)
-	}
-	t, err := security.GenerateRefreshToken(i)
+	r, err := security.GenerateRefreshToken(user.Id)
 	if err != nil {
 		return convertError(err)
 	}
 
 	dto := oapi.AuthenticationResponse{
-		AccessToken: t,
+		AccessToken:  t,
+		RefreshToken: r,
+		TokenType:    "bearer",
 	}
 	c.JSON(http.StatusOK, dto)
 	return
@@ -100,7 +84,9 @@ func (controller *Controller) RefreshAccessToken(c echo.Context, params oapi.Ref
 	}
 
 	dto := oapi.AuthenticationResponse{
-		AccessToken: t,
+		AccessToken:  t,
+		RefreshToken: params.RefreshToken,
+		TokenType:    "bearer",
 	}
 	c.JSON(http.StatusOK, dto)
 	return

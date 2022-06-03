@@ -23,31 +23,8 @@ tags:
   - name: tweets
     description: Access to Tweets
 
-
 paths:
-
-  /oauth/access_token:
-    get:
-      tags:
-        - client
-      summary: Get Refresh Token.
-      description: リフレッシュトークンの取得.
-      operationId: GetRefreshToken
-      parameters:
-        - name: access_token
-          in: query
-          description: access token
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthenticationResponse'
-
+  /oauth2/token:
     post:
       tags:
         - client
@@ -58,16 +35,16 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AuthenticationRequest'
+              $ref: "#/components/schemas/AuthenticationRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthenticationResponse'
+                $ref: "#/components/schemas/AuthenticationResponse"
 
-  /oauth/refresh_access_token:
+  /oauth2/refresh_token:
     get:
       tags:
         - client
@@ -82,16 +59,16 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthenticationResponse'
+                $ref: "#/components/schemas/AuthenticationResponse"
 
   /users:
     post:
-      tags: 
+      tags:
         - users
       summary: Create a new User.
       description: ユーザー情報登録
@@ -102,13 +79,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserPostRequest'
+              $ref: "#/components/schemas/UserPostRequest"
             example:
               name: John Doe
               mail: john@gmail.com
               password: tSNP2amF
       responses:
-        '201':
+        "201":
           description: CREATED
 
   /users/{userId}:
@@ -128,14 +105,14 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: A single User model
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: '#/components/schemas/User'
+                  $ref: "#/components/schemas/User"
                 example:
                   id: 3
                   name: Richard Roe
@@ -158,11 +135,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserPatchRequest'
+              $ref: "#/components/schemas/UserPatchRequest"
             example:
               name: John Doe
       responses:
-        '200':
+        "200":
           description: CREATED
 
   /tweets/{tweetId}:
@@ -180,32 +157,30 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: A single Tweet model
           content:
             application/json:
               schema:
                 type: object
                 items:
-                  $ref: '#/components/schemas/Tweet'
+                  $ref: "#/components/schemas/Tweet"
                 example:
                   id: 1
                   text: John Doe
                   user_id: 1
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:
-
     ApiError:
       type: object
       required:
         - error
       properties:
         error:
-          $ref: '#/components/schemas/Error'
+          $ref: "#/components/schemas/Error"
 
     Error:
       type: object
@@ -220,7 +195,7 @@ components:
         errors:
           type: array
           items:
-            $ref: '#/components/schemas/SubError'
+            $ref: "#/components/schemas/SubError"
 
     SubError:
       type: object
@@ -242,7 +217,7 @@ components:
         - id
       properties:
         id:
-          type: integer 
+          type: integer
           format: int64
         name:
           type: string
@@ -298,11 +273,17 @@ components:
 
     AuthenticationResponse:
       type: object
+      required:
+        - access_token
+        - refresh_token
+        - token_type
       properties:
         access_token:
           type: string
-      required:
-        - access_token
+        refresh_token:
+          type: string
+        token_type:
+          type: string
 
   responses:
     BadRequest:
@@ -336,14 +317,13 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
-# security: 
+# security:
 #   # Non-OAuth setting
 #   - api_key: []
 #   # OAuth setting
 #   - users_auth:
 #     - write:users
 #     - read:users
-
 
 externalDocs:
   description: Find more info here
