@@ -85,6 +85,8 @@ func (w *ServerInterfaceWrapper) GetTweetByID(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostUser(ctx echo.Context) error {
 	var err error
 
+	ctx.Set(BearerAuthScopes, []string{""})
+
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostUser(ctx)
 	return err
@@ -118,6 +120,8 @@ func (w *ServerInterfaceWrapper) PatchUser(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userId: %s", err))
 	}
+
+	ctx.Set(BearerAuthScopes, []string{""})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PatchUser(ctx, userId)

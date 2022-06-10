@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"github.com/so-heee/go-rest-api/api/domain/model"
 	"github.com/so-heee/go-rest-api/api/domain/value"
 	"github.com/so-heee/go-rest-api/api/infrastructure/security"
@@ -97,6 +99,13 @@ func (controller *Controller) PostUser(c echo.Context) (err error) {
 	if err := c.Bind(&p); err != nil {
 		return convertError(err)
 	}
+	if err := c.Validate(p); err != nil {
+		errs := err.(validation.Errors)
+		for k, err := range errs {
+			c.Logger().Error(k + ": " + err.Error())
+		}
+		return err
+	}
 	u := model.NewUser(p.Name, p.Mail, p.Password)
 	x, err := u.Password.ConvertHash()
 	if err != nil {
@@ -125,6 +134,7 @@ func (controller *Controller) GetUserByID(c echo.Context, id int) (err error) {
 	}
 	dto := oapi.User{
 		Id:   int64(user.Id),
+		Mail: &user.Mail,
 		Name: &user.Name,
 	}
 	c.JSON(http.StatusOK, dto)
@@ -136,8 +146,12 @@ func (controller *Controller) PatchUser(c echo.Context, id int) (err error) {
 	if err := c.Bind(&p); err != nil {
 		return convertError(err)
 	}
-	u := model.User{Id: id, Name: p.Name}
+	log.Info(*p.Name)
+	log.Info(p.Mail)
+	u := model.User{Id: id, Name: *p.Name, Mail: *p.Mail}
+	log.Info("test2")
 	user, err := controller.UserService.UpdateUser(&u)
+	log.Info("test3")
 	if err != nil {
 		return convertError(err)
 	}

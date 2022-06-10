@@ -84,6 +84,8 @@ paths:
               name: John Doe
               mail: john@gmail.com
               password: tSNP2amF
+      security:
+        - BearerAuth: []
       responses:
         "201":
           description: CREATED
@@ -130,6 +132,8 @@ paths:
           required: true
           schema:
             type: integer
+      security:
+        - BearerAuth: []
       requestBody:
         description: user to create
         content:
@@ -254,10 +258,12 @@ components:
 
     UserPatchRequest:
       type: object
-      required:
-        - name
       properties:
         name:
+          type: string
+        mail:
+          type: string
+        password:
           type: string
 
     AuthenticationRequest:

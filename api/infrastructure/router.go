@@ -15,6 +15,7 @@ import (
 func Run() {
 	// Echo instance
 	e := echo.New()
+	e.Validator = &oapi.CustomValidator{}
 
 	// Middleware
 	e.Use(middleware.Logger())

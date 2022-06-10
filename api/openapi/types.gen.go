@@ -55,7 +55,9 @@ type User struct {
 
 // UserPatchRequest defines model for UserPatchRequest.
 type UserPatchRequest struct {
-	Name string `json:"name"`
+	Mail     *string `json:"mail,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	Password *string `json:"password,omitempty"`
 }
 
 // UserPostRequest defines model for UserPostRequest.
