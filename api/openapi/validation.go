@@ -13,11 +13,15 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
-func (u User) Validate() error {
+func (u UserPostRequest) Validate() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(
 			&u.Name,
 			validation.RuneLength(1, 10).Error("名前は 1 - 10 文字です"),
+		),
+		validation.Field(
+			&u.Password,
+			validation.RuneLength(5, 10).Error("パスワードは 5 - 10 文字です"),
 		),
 	)
 }

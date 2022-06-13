@@ -101,10 +101,7 @@ func (controller *Controller) PostUser(c echo.Context) (err error) {
 	}
 	if err := c.Validate(p); err != nil {
 		errs := err.(validation.Errors)
-		for k, err := range errs {
-			c.Logger().Error(k + ": " + err.Error())
-		}
-		return err
+		return convertError(ErrValidate, convertValidationError(errs)...)
 	}
 	u := model.NewUser(p.Name, p.Mail, p.Password)
 	x, err := u.Password.ConvertHash()
@@ -149,9 +146,7 @@ func (controller *Controller) PatchUser(c echo.Context, id int) (err error) {
 	log.Info(*p.Name)
 	log.Info(p.Mail)
 	u := model.User{Id: id, Name: *p.Name, Mail: *p.Mail}
-	log.Info("test2")
 	user, err := controller.UserService.UpdateUser(&u)
-	log.Info("test3")
 	if err != nil {
 		return convertError(err)
 	}

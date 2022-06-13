@@ -10,7 +10,7 @@ type TweetRepository struct {
 func (r *TweetRepository) FindById(id int) (*model.Tweet, error) {
 	t := model.Tweet{}
 	if err := r.First(&t, id).Error(); err != nil {
-		return nil, convertError(err)
+		return nil, err
 	}
 	return &t, nil
 }

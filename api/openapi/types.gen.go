@@ -36,7 +36,6 @@ type Error struct {
 type SubError struct {
 	Message   string `json:"message"`
 	Parameter string `json:"parameter"`
-	Value     string `json:"value"`
 }
 
 // Tweet defines model for Tweet.

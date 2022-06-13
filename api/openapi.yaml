@@ -205,12 +205,9 @@ components:
       type: object
       required:
         - parameter
-        - value
         - message
       properties:
         parameter:
-          type: string
-        value:
           type: string
         message:
           type: string
