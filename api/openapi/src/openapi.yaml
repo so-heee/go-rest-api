@@ -84,8 +84,6 @@ paths:
               name: John Doe
               mail: john@gmail.com
               password: tSNP2amF
-      security:
-        - BearerAuth: []
       responses:
         "201":
           description: CREATED
@@ -224,6 +222,7 @@ components:
           type: string
         mail:
           type: string
+          format: email
 
     Tweet:
       type: object
@@ -247,21 +246,39 @@ components:
         - password
       properties:
         name:
+          description: 名前
           type: string
+          minimum: 1
+          maximum: 20
         mail:
+          description: メールアドレス
           type: string
+          format: email
         password:
+          description: パスワード
           type: string
+          format: password
+          minimum: 8
+          maximum: 20
 
     UserPatchRequest:
       type: object
       properties:
         name:
+          description: 名前
           type: string
+          minimum: 1
+          maximum: 20
         mail:
+          description: メールアドレス
           type: string
+          format: email
         password:
+          description: パスワード
           type: string
+          format: password
+          minimum: 8
+          maximum: 20
 
     AuthenticationRequest:
       type: object

@@ -85,8 +85,6 @@ func (w *ServerInterfaceWrapper) GetTweetByID(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) PostUser(ctx echo.Context) error {
 	var err error
 
-	ctx.Set(BearerAuthScopes, []string{""})
-
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.PostUser(ctx)
 	return err

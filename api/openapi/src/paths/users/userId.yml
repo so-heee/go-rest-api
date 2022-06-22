@@ -1,0 +1,49 @@
+get:
+  tags:
+    - users
+  summary: Get User by ID.
+  description: ユーザー情報取得
+  operationId: GetUserByID
+  parameters:
+    - name: userId
+      in: path
+      description: user id
+      required: true
+      schema:
+        type: integer
+  security:
+    - BearerAuth: []
+  responses:
+    "200":
+      description: A single User model
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/User.yml
+
+patch:
+  tags:
+    - users
+  summary: Patch User.
+  description: ユーザー情報更新
+  operationId: PatchUser
+  parameters:
+    - name: userId
+      in: path
+      description: user id
+      required: true
+      schema:
+        type: integer
+  security:
+    - BearerAuth: []
+  requestBody:
+    description: user to create
+    content:
+      application/json:
+        schema:
+          $ref: ../../components/schemas/UserPatchRequest.yml
+        example:
+          name: John Doe
+  responses:
+    "200":
+      description: CREATED

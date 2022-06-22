@@ -1,0 +1,10 @@
+SubError:
+  type: object
+  required:
+    - parameter
+    - message
+  properties:
+    parameter:
+      type: string
+    message:
+      type: string

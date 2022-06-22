@@ -1,0 +1,26 @@
+get:
+  tags:
+    - tweets
+  summary: Get tweet by ID.
+  description: ツイート情報取得
+  operationId: GetTweetByID
+  parameters:
+    - name: tweetId
+      in: path
+      description: tweet id
+      required: true
+      schema:
+        type: integer
+  responses:
+    "200":
+      description: A single Tweet model
+      content:
+        application/json:
+          schema:
+            type: object
+            items:
+              $ref: ../../components/schemas/Tweet.yml
+            example:
+              id: 1
+              text: John Doe
+              user_id: 1

@@ -1,0 +1,18 @@
+UserPatchRequest:
+  type: object
+  properties:
+    name:
+      description: 名前
+      type: string
+      minimum: 1
+      maximum: 20
+    mail:
+      description: メールアドレス
+      type: string
+      format: email
+    password:
+      description: パスワード
+      type: string
+      format: password
+      minimum: 8
+      maximum: 20

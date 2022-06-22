@@ -1,0 +1,18 @@
+post:
+  tags:
+    - client
+  summary: Authenticate.
+  description: ユーザー名、パスワードによる認証.
+  operationId: Authenticate
+  requestBody:
+    content:
+      multipart/form-data:
+        schema:
+          $ref: ../../components/schemas/AuthenticationRequest.yml
+  responses:
+    "200":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/AuthenticationResponse.yml

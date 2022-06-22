@@ -1,0 +1,20 @@
+get:
+  tags:
+    - client
+  summary: Refresh Access Token.
+  description: アクセストークンの更新.
+  operationId: RefreshAccessToken
+  parameters:
+    - name: refresh_token
+      in: query
+      description: refresh token
+      required: true
+      schema:
+        type: string
+  responses:
+    "200":
+      description: OK
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/AuthenticationResponse.yml

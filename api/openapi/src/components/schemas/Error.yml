@@ -1,0 +1,14 @@
+Error:
+  type: object
+  required:
+    - code
+    - message
+  properties:
+    code:
+      type: string
+    message:
+      type: string
+    errors:
+      type: array
+      items:
+        $ref: ./SubError.yml

@@ -1,0 +1,6 @@
+BadRequest:
+  description: "BadRequest – The request was invalid or cannot be served"
+  content:
+    application/json:
+      schema:
+        $ref: ../schemas/ApiError.yml

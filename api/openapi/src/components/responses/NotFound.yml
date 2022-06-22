@@ -1,0 +1,6 @@
+NotFound:
+  description: "NotFound – There is no resource behind the URI"
+  content:
+    application/json:
+      schema:
+        $ref: ../schemas/ApiError.yml

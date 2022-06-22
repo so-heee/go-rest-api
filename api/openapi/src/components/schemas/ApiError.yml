@@ -1,0 +1,7 @@
+ApiError:
+  type: object
+  required:
+    - error
+  properties:
+    error:
+      $ref: ./Error.yml
