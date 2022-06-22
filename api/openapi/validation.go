@@ -28,10 +28,14 @@ func (u UserPostRequest) Validate() error {
 			validation.RuneLength(1, 20).Error("名前は 1 - 20 文字です"),
 		),
 		validation.Field(
-			&u.Password,
+			&u.Mail,
 			validation.Required.Error("メールアドレスは必須入力です"),
-			validation.RuneLength(8, 20).Error("パスワードは 8 - 20 文字です"),
 			is.Email.Error(ErrMsgEmail),
+		),
+		validation.Field(
+			&u.Password,
+			validation.Required.Error("パスワードは必須入力です"),
+			validation.RuneLength(8, 20).Error("パスワードは 8 - 20 文字です"),
 		),
 	)
 }
@@ -40,12 +44,14 @@ func (u UserPatchRequest) Validate() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(
 			&u.Name,
-			validation.Required.Error("名前は必須入力です"),
 			validation.RuneLength(1, 20).Error("名前は 1 - 20 文字です"),
 		),
 		validation.Field(
+			&u.Mail,
+			is.Email.Error(ErrMsgEmail),
+		),
+		validation.Field(
 			&u.Password,
-			validation.Required.Error("メールアドレスは必須入力です"),
 			validation.RuneLength(8, 20).Error("パスワードは 8 - 20 文字です"),
 			is.Email.Error(ErrMsgEmail),
 		),

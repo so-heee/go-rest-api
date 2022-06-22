@@ -143,13 +143,19 @@ func (controller *Controller) PatchUser(c echo.Context, id int) (err error) {
 	if err := c.Bind(&p); err != nil {
 		return convertError(err)
 	}
-	log.Info(*p.Name)
-	log.Info(p.Mail)
-	u := model.User{Id: id, Name: *p.Name, Mail: *p.Mail}
+	log.Info("test")
+	if err := c.Validate(p); err != nil {
+		errs := err.(validation.Errors)
+		return convertError(ErrValidate, convertValidationError(errs)...)
+	}
+	log.Info("test2")
+	u := model.User{Id: id, Name: p.Name, Mail: p.Mail}
+	log.Info("test3")
 	user, err := controller.UserService.UpdateUser(&u)
 	if err != nil {
 		return convertError(err)
 	}
+	log.Info("test4")
 
 	dto := oapi.User{
 		Id:   int64(user.Id),

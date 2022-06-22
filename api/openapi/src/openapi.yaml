@@ -110,12 +110,11 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                items:
-                  $ref: "#/components/schemas/User"
-                example:
-                  id: 3
-                  name: Richard Roe
+                $ref: "#/components/schemas/User"
+              example:
+                id: 1
+                text: John Doe
+                user_id: 1
 
     patch:
       tags:

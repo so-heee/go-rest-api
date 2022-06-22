@@ -593,7 +593,7 @@ func (r PostUserResponse) StatusCode() int {
 type GetUserByIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *map[string]interface{}
+	JSON200      *User
 }
 
 // Status returns HTTPResponse.Status
@@ -819,7 +819,7 @@ func ParseGetUserByIDResponse(rsp *http.Response) (*GetUserByIDResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest map[string]interface{}
+		var dest User
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
