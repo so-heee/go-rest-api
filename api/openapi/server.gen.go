@@ -22,6 +22,9 @@ type ServerInterface interface {
 	// Get tweet by ID.
 	// (GET /tweets/{tweetId})
 	GetTweetByID(ctx echo.Context, tweetId int) error
+	// Get Users.
+	// (GET /users)
+	GetUsers(ctx echo.Context) error
 	// Create a new User.
 	// (POST /users)
 	PostUser(ctx echo.Context) error
@@ -81,6 +84,15 @@ func (w *ServerInterfaceWrapper) GetTweetByID(ctx echo.Context) error {
 	return err
 }
 
+// GetUsers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetUsers(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshalled arguments
+	err = w.Handler.GetUsers(ctx)
+	return err
+}
+
 // PostUser converts echo context to params.
 func (w *ServerInterfaceWrapper) PostUser(ctx echo.Context) error {
 	var err error
@@ -100,8 +112,6 @@ func (w *ServerInterfaceWrapper) GetUserByID(ctx echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userId: %s", err))
 	}
-
-	ctx.Set(BearerAuthScopes, []string{""})
 
 	// Invoke the callback with all the unmarshalled arguments
 	err = w.Handler.GetUserByID(ctx, userId)
@@ -157,6 +167,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	router.GET(baseURL+"/oauth2/refresh_token", wrapper.RefreshAccessToken)
 	router.POST(baseURL+"/oauth2/token", wrapper.Authenticate)
 	router.GET(baseURL+"/tweets/:tweetId", wrapper.GetTweetByID)
+	router.GET(baseURL+"/users", wrapper.GetUsers)
 	router.POST(baseURL+"/users", wrapper.PostUser)
 	router.GET(baseURL+"/users/:userId", wrapper.GetUserByID)
 	router.PATCH(baseURL+"/users/:userId", wrapper.PatchUser)

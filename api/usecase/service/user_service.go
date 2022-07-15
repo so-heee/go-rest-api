@@ -20,6 +20,11 @@ func (s *UserService) UpdateUser(u *model.User) (user *model.User, err error) {
 	return
 }
 
+func (s *UserService) Users() (user []model.User, err error) {
+	user, err = s.UserRepository.Users()
+	return
+}
+
 func (s *UserService) UserById(id int) (user *model.User, err error) {
 	user, err = s.UserRepository.FindById(id)
 	return

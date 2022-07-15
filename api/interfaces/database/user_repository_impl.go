@@ -20,6 +20,13 @@ func (r *UserRepository) UpdateUser(u *model.User) (*model.User, error) {
 	return u, nil
 }
 
+func (r *UserRepository) Users() (users []model.User, err error) {
+	if err = r.Find(&users).Error(); err != nil {
+		return
+	}
+	return
+}
+
 func (r *UserRepository) FindById(id int) (user *model.User, err error) {
 	if err = r.First(&user, id).Error(); err != nil {
 		return

@@ -99,6 +99,9 @@ type ClientInterface interface {
 	// GetTweetByID request
 	GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetUsers request
+	GetUsers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostUser request with any body
 	PostUserWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -139,6 +142,18 @@ func (c *Client) AuthenticateWithBody(ctx context.Context, contentType string, b
 
 func (c *Client) GetTweetByID(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTweetByIDRequest(c.Server, tweetId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetUsers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetUsersRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -298,6 +313,33 @@ func NewGetTweetByIDRequest(server string, tweetId int) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/tweets/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetUsersRequest generates requests for GetUsers
+func NewGetUsersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/users")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -488,6 +530,9 @@ type ClientWithResponsesInterface interface {
 	// GetTweetByID request
 	GetTweetByIDWithResponse(ctx context.Context, tweetId int, reqEditors ...RequestEditorFn) (*GetTweetByIDResponse, error)
 
+	// GetUsers request
+	GetUsersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsersResponse, error)
+
 	// PostUser request with any body
 	PostUserWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostUserResponse, error)
 
@@ -563,6 +608,28 @@ func (r GetTweetByIDResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetTweetByIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetUsersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]User
+}
+
+// Status returns HTTPResponse.Status
+func (r GetUsersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetUsersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -658,6 +725,15 @@ func (c *ClientWithResponses) GetTweetByIDWithResponse(ctx context.Context, twee
 		return nil, err
 	}
 	return ParseGetTweetByIDResponse(rsp)
+}
+
+// GetUsersWithResponse request returning *GetUsersResponse
+func (c *ClientWithResponses) GetUsersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetUsersResponse, error) {
+	rsp, err := c.GetUsers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetUsersResponse(rsp)
 }
 
 // PostUserWithBodyWithResponse request with arbitrary body returning *PostUserResponse
@@ -782,6 +858,32 @@ func ParseGetTweetByIDResponse(rsp *http.Response) (*GetTweetByIDResponse, error
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetUsersResponse parses an HTTP response from a GetUsersWithResponse call
+func ParseGetUsersResponse(rsp *http.Response) (*GetUsersResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []User
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 

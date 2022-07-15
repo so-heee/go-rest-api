@@ -94,6 +94,26 @@ func (controller *Controller) RefreshAccessToken(c echo.Context, params oapi.Ref
 	return
 }
 
+func (controller *Controller) GetUsers(c echo.Context) (err error) {
+	users, err := controller.UserService.Users()
+	if err != nil {
+		return convertError(err)
+	}
+	dtos := []oapi.User{}
+	for _, u := range users {
+		dto := oapi.User{
+			Id:   int64(u.Id),
+			Mail: &u.Mail,
+			Name: &u.Name,
+		}
+
+		dtos = append(dtos, dto)
+
+	}
+	c.JSON(http.StatusOK, dtos)
+	return
+}
+
 func (controller *Controller) PostUser(c echo.Context) (err error) {
 	var p oapi.UserPostRequest
 	if err := c.Bind(&p); err != nil {
@@ -149,7 +169,7 @@ func (controller *Controller) PatchUser(c echo.Context, id int) (err error) {
 		return convertError(ErrValidate, convertValidationError(errs)...)
 	}
 	log.Info("test2")
-	u := model.User{Id: id, Name: p.Name, Mail: p.Mail}
+	u := model.User{Id: id, Name: *p.Name, Mail: *p.Mail}
 	log.Info("test3")
 	user, err := controller.UserService.UpdateUser(&u)
 	if err != nil {
