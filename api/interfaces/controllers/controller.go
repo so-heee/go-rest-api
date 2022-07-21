@@ -101,14 +101,15 @@ func (controller *Controller) GetUsers(c echo.Context) (err error) {
 	}
 	dtos := []oapi.User{}
 	for _, u := range users {
+		mail := u.Mail
+		name := u.Name
 		dto := oapi.User{
 			Id:   int64(u.Id),
-			Mail: &u.Mail,
-			Name: &u.Name,
+			Mail: &mail,
+			Name: &name,
 		}
-
+		log.Info(dto)
 		dtos = append(dtos, dto)
-
 	}
 	c.JSON(http.StatusOK, dtos)
 	return

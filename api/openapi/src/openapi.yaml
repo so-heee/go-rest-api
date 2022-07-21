@@ -75,7 +75,7 @@ paths:
       operationId: GetUsers
       responses:
         "200":
-          description: A list User model
+          description: List User model
           content:
             application/json:
               schema:
