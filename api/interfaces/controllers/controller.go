@@ -95,23 +95,11 @@ func (controller *Controller) RefreshAccessToken(c echo.Context, params oapi.Ref
 }
 
 func (controller *Controller) GetUsers(c echo.Context) (err error) {
-	users, err := controller.UserService.Users()
+	dto, err := controller.UserService.Users()
 	if err != nil {
 		return convertError(err)
 	}
-	dtos := []oapi.User{}
-	for _, u := range users {
-		mail := u.Mail
-		name := u.Name
-		dto := oapi.User{
-			Id:   int64(u.Id),
-			Mail: &mail,
-			Name: &name,
-		}
-		log.Info(dto)
-		dtos = append(dtos, dto)
-	}
-	c.JSON(http.StatusOK, dtos)
+	c.JSON(http.StatusOK, dto)
 	return
 }
 
@@ -146,14 +134,9 @@ func (controller *Controller) PostUser(c echo.Context) (err error) {
 }
 
 func (controller *Controller) GetUserByID(c echo.Context, id int) (err error) {
-	user, err := controller.UserService.UserById(id)
+	dto, err := controller.UserService.UserById(id)
 	if err != nil {
 		return convertError(err)
-	}
-	dto := oapi.User{
-		Id:   int64(user.Id),
-		Mail: &user.Mail,
-		Name: &user.Name,
 	}
 	c.JSON(http.StatusOK, dto)
 	return

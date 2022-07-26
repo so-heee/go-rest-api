@@ -27,7 +27,7 @@ func (r *UserRepository) Users() (users []model.User, err error) {
 	return
 }
 
-func (r *UserRepository) FindById(id int) (user *model.User, err error) {
+func (r *UserRepository) FindById(id int) (user model.User, err error) {
 	if err = r.First(&user, id).Error(); err != nil {
 		return
 	}
